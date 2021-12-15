@@ -44,6 +44,7 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/params/types/ctypes"
 	"github.com/ethereum/go-ethereum/trie"
+	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -214,6 +215,8 @@ type BlockChain struct {
 
 	artificialFinalityNoDisable     *int32 // manual override prevents disabling artificial finality feature activation
 	artificialFinalityEnabledStatus int32  // toggles artificial finality features; will be always 1 if artificialFinalityForce=1
+
+	MelangeConfigs Melange.App
 }
 
 // NewBlockChain returns a fully initialised block chain using information
