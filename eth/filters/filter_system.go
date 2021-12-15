@@ -374,7 +374,7 @@ func (es *EventSystem) handleTxsEvent(filters filterIndex, ev core.NewTxsEvent) 
 }
 
 func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
-	log.Info("Emitting Event","Block Number",ev.Block.Number().String(),"Block Hash",ev.Block.Hash().Hex())
+	log.Info("Emitting Event","Block Number",ev.Block.Number().String(),"Block Hash",ev.Block.Hash().Hex(),"Reorg",ev.Reorg)
 }
 
 func (es *EventSystem) handleChainEvent(filters filterIndex, ev core.ChainEvent) {
