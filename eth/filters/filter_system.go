@@ -373,6 +373,10 @@ func (es *EventSystem) handleTxsEvent(filters filterIndex, ev core.NewTxsEvent) 
 	}
 }
 
+func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
+	log.Info("Emitting Event","Block Number",ev.Block.Number().String(),"Block Hash",ev.Block.Hash().Hex())
+}
+
 func (es *EventSystem) handleChainEvent(filters filterIndex, ev core.ChainEvent) {
 	for _, f := range filters[BlocksSubscription] {
 		f.headers <- ev.Block.Header()
@@ -512,7 +516,12 @@ func (es *EventSystem) eventLoop() {
 		case ev := <-es.pendingLogsCh:
 			es.handlePendingLogs(index, ev)
 		case ev := <-es.chainCh:
-			es.handleChainEvent(index, ev)
+			es.emitEvents(index,ev)
+			// go-ethereum does not emit out handleChain events
+			// in case of reorgs, so we will avoid that too
+			if !ev.Reorg {
+				es.handleChainEvent(index, ev)
+			}
 		case ev := <-es.chainSideCh:
 			es.handleChainSideEvent(index, ev)
 

@@ -34,6 +34,7 @@ type ChainEvent struct {
 	Block *types.Block
 	Hash  common.Hash
 	Logs  []*types.Log
+	Reorg bool
 }
 
 type ChainSideEvent struct {

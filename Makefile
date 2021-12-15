@@ -14,6 +14,12 @@ geth:
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/geth\" to launch geth."
 
+goerli:
+	$(GORUN) build/ci.go install ./cmd/geth
+	@echo "Done building."
+	@echo "Run \"$(GOBIN)/geth\" to launch geth."
+	$(GOBIN)/geth --syncmode=full --goerli
+
 all:
 	$(GORUN) build/ci.go install
 

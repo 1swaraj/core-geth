@@ -2184,6 +2184,8 @@ func (bc *BlockChain) reorg(data *reorgData) error {
 	if len(data.oldChain) > 0 {
 		for i := len(data.oldChain) - 1; i >= 0; i-- {
 			bc.chainSideFeed.Send(ChainSideEvent{Block: data.oldChain[i]})
+			// Sending out reorg events with reorg flag true
+			bc.chainFeed.Send(ChainEvent{Block: data.oldChain[i], Logs: data.deletedLogs[i], Hash: data.oldChain[i].Hash(), Reorg: true})
 		}
 	}
 	return nil
