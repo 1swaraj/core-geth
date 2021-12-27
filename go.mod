@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/Azure/azure-storage-blob-go v0.7.0
-	github.com/NethermindEth/MelangeBE v0.0.0-20211215225412-11ee67ba2ad8 // indirect
+	github.com/NethermindEth/MelangeBE v0.0.0-20211218235313-0ea3b661ac43
 	github.com/VictoriaMetrics/fastcache v1.6.0
 	github.com/alecthomas/jsonschema v0.0.0-20210413112511-5c9c23bdc720
 	github.com/aws/aws-sdk-go-v2 v1.2.0
@@ -17,7 +17,6 @@ require (
 	github.com/consensys/gnark-crypto v0.4.1-0.20210426202927-39ac3d4b3f1f
 	github.com/davecgh/go-spew v1.1.1
 	github.com/deckarep/golang-set v0.0.0-20180603214616-504e848d77ea
-	github.com/deepmap/oapi-codegen v1.8.2 // indirect
 	github.com/docker/docker v1.4.2-0.20180625184442-8e610b2b55bf
 	github.com/dop251/goja v0.0.0-20211011172007-d99e4b8cbf48
 	github.com/edsrzf/mmap-go v1.0.0
@@ -42,7 +41,6 @@ require (
 	github.com/iancoleman/strcase v0.2.0
 	github.com/influxdata/influxdb v1.8.3
 	github.com/influxdata/influxdb-client-go/v2 v2.4.0
-	github.com/influxdata/line-protocol v0.0.0-20210311194329-9aa0e372d097 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458
 	github.com/jedisct1/go-minisign v0.0.0-20190909160543-45766022959e
 	github.com/julienschmidt/httprouter v1.2.0
@@ -60,13 +58,13 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/status-im/keycard-go v0.0.0-20190316090335-8537d3370df4
 	github.com/stretchr/testify v1.7.0
-	github.com/syndtr/goleveldb v1.0.1-0.20210305035536-64b5b1c73954
+	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tidwall/gjson v1.9.3
-	github.com/tklauser/go-sysconf v0.3.5 // indirect
 	github.com/tyler-smith/go-bip39 v1.0.1-0.20181017060643-dbb3b84ba2ef
 	github.com/xeipuuv/gojsonschema v1.2.0
 	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2
 	golang.org/x/exp v0.0.0-20191227195350-da58074b4299
+	golang.org/x/net v0.0.0-20211209124913-491a49abca63 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210816183151-1e6c022a8912
 	golang.org/x/text v0.3.6

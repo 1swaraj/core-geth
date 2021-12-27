@@ -20,14 +20,17 @@ package core
 import (
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/core/melange"
 	"io"
 	"math/big"
 	mrand "math/rand"
+	"os"
 	"sort"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/mclock"
 	"github.com/ethereum/go-ethereum/common/prque"
@@ -44,7 +47,6 @@ import (
 	"github.com/ethereum/go-ethereum/metrics"
 	"github.com/ethereum/go-ethereum/params/types/ctypes"
 	"github.com/ethereum/go-ethereum/trie"
-	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -216,7 +218,7 @@ type BlockChain struct {
 	artificialFinalityNoDisable     *int32 // manual override prevents disabling artificial finality feature activation
 	artificialFinalityEnabledStatus int32  // toggles artificial finality features; will be always 1 if artificialFinalityForce=1
 
-	MelangeConfigs Melange.App
+	MelangeApp Melange.App // Struct that carries the configs for Melange app
 }
 
 // NewBlockChain returns a fully initialised block chain using information
@@ -258,6 +260,16 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig ctyp
 	bc.validator = NewBlockValidator(chainConfig, bc, engine)
 	bc.prefetcher = newStatePrefetcher(chainConfig, bc, engine)
 	bc.processor = NewStateProcessor(chainConfig, bc, engine)
+
+	//
+	// Melange Initialization
+	//
+	// Get path for the app.yaml file
+	appPath := os.Getenv("Melange")
+	log.Info("Fetching Melange Config","path",appPath)
+	// Initializing the Melange App
+	bc.MelangeApp = melange.AppInit(appPath)
+	log.Info("Melange App Init","sources",bc.MelangeApp.Sources)
 
 	var err error
 	bc.hc, err = NewHeaderChain(db, chainConfig, engine, bc.insertStopped)
@@ -1370,7 +1382,7 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 	bc.futureBlocks.Remove(block.Hash())
 
 	if status == CanonStatTy {
-		bc.chainFeed.Send(ChainEvent{Block: block, Hash: block.Hash(), Logs: logs})
+		bc.chainFeed.Send(ChainEvent{Block: block, Hash: block.Hash(), Logs: logs, Melange: bc.MelangeApp})
 		if len(logs) > 0 {
 			bc.logsFeed.Send(logs)
 		}
@@ -2188,7 +2200,7 @@ func (bc *BlockChain) reorg(data *reorgData) error {
 		for i := len(data.oldChain) - 1; i >= 0; i-- {
 			bc.chainSideFeed.Send(ChainSideEvent{Block: data.oldChain[i]})
 			// Sending out reorg events with reorg flag true
-			bc.chainFeed.Send(ChainEvent{Block: data.oldChain[i], Logs: data.deletedLogs[i], Hash: data.oldChain[i].Hash(), Reorg: true})
+			bc.chainFeed.Send(ChainEvent{Block: data.oldChain[i], Logs: data.deletedLogs[i], Hash: data.oldChain[i].Hash(), Reorg: true, Melange: bc.MelangeApp})
 		}
 	}
 	return nil

@@ -21,6 +21,9 @@ package filters
 import (
 	"context"
 	"fmt"
+	MelangeEvent "github.com/NethermindEth/MelangeBE/DataIngestor"
+	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
+
 	"sync"
 	"time"
 
@@ -374,7 +377,30 @@ func (es *EventSystem) handleTxsEvent(filters filterIndex, ev core.NewTxsEvent) 
 }
 
 func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
-	log.Info("Emitting Event","Block Number",ev.Block.Number().String(),"Block Hash",ev.Block.Hash().Hex(),"Reorg",ev.Reorg)
+	log.Info("Melange", "Sources", ev.Melange.Sources)
+	blockEvent := Melange.BlockEvent{
+		ParentHash:  ev.Block.Hash(),
+		UncleHash:   ev.Block.UncleHash(),
+		Coinbase:    ev.Block.Coinbase(),
+		Root:        ev.Block.Root(),
+		TxHash:      ev.Block.TxHash(),
+		ReceiptHash: ev.Block.ReceiptHash(),
+		Bloom:       Melange.Bloom(ev.Block.Bloom()),
+		Difficulty:  ev.Block.Difficulty(),
+		Number:      ev.Block.Number(),
+		GasLimit:    ev.Block.GasLimit(),
+		GasUsed:     ev.Block.GasUsed(),
+		Time:        ev.Block.Time(),
+		Extra:       ev.Block.Extra(),
+		MixDigest:   ev.Block.MixDigest(),
+		Nonce:       ev.Block.Nonce(),
+		BaseFee:     ev.Block.BaseFee(),
+	}
+	ok := MelangeEvent.EmitBlockEvent(ev.Melange.EventsFeed,blockEvent)
+	if !ok {
+		log.Error("Problem Sending Event to Melange","OK",ok)
+	}
+	log.Info("Emitting Event", "Block Number", ev.Block.Number().String(), "Block Hash", ev.Block.Hash().Hex(), "Reorg", ev.Reorg)
 }
 
 func (es *EventSystem) handleChainEvent(filters filterIndex, ev core.ChainEvent) {
@@ -516,7 +542,7 @@ func (es *EventSystem) eventLoop() {
 		case ev := <-es.pendingLogsCh:
 			es.handlePendingLogs(index, ev)
 		case ev := <-es.chainCh:
-			es.emitEvents(index,ev)
+			es.emitEvents(index, ev)
 			// go-ethereum does not emit out handleChain events
 			// in case of reorgs, so we will avoid that too
 			if !ev.Reorg {

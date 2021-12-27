@@ -1,0 +1,7 @@
+region: us-west-1
+db_secret_name: melange-database-credentials
+sources:
+  - name: Carthage Mainnet
+    weight: 100
+    endpoint: carthage.nethermind.io
+    chain: mainnet

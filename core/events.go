@@ -17,6 +17,7 @@
 package core
 
 import (
+	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -31,10 +32,11 @@ type NewMinedBlockEvent struct{ Block *types.Block }
 type RemovedLogsEvent struct{ Logs []*types.Log }
 
 type ChainEvent struct {
-	Block *types.Block
-	Hash  common.Hash
-	Logs  []*types.Log
-	Reorg bool
+	Block   *types.Block
+	Hash    common.Hash
+	Logs    []*types.Log
+	Melange Melange.App
+	Reorg   bool
 }
 
 type ChainSideEvent struct {
