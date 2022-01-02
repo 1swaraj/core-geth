@@ -20,10 +20,11 @@ package filters
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	MelangeEvent "github.com/NethermindEth/MelangeBE/DataIngestor"
 	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
-
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	"sync"
 	"time"
 
@@ -396,11 +397,47 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 		Nonce:       ev.Block.Nonce(),
 		BaseFee:     ev.Block.BaseFee(),
 	}
-	ok := MelangeEvent.EmitBlockEvent(ev.Melange.EventsFeed,blockEvent)
+	ok := MelangeEvent.EmitBlockEvent(ev.Melange.EventsFeed, blockEvent)
 	if !ok {
-		log.Error("Problem Sending Event to Melange","OK",ok)
+		log.Error("Problem Sending Event to Melange", "OK", ok)
 	}
 	log.Info("Emitting Event", "Block Number", ev.Block.Number().String(), "Block Hash", ev.Block.Hash().Hex(), "Reorg", ev.Reorg)
+
+	for index, tx := range ev.Block.Transactions() {
+		sender, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+		if err != nil {
+			log.Error("Error in getting from address of transaction", "Details", err, "Hash", tx.Hash().String())
+		}
+		txn,err := tx.MarshalJSON()
+		if err != nil {
+			log.Error("Error in marshalling json", "Error", err.Error())
+		}
+
+		txnEvent := Melange.TransactionEvent{}
+		err = json.Unmarshal(txn,&txnEvent)
+		if err != nil {
+			log.Error("Error in unmarshalling json", "Error", err.Error())
+		}
+
+		v,r,s := tx.RawSignatureValues()
+		txnEvent.V = (*hexutil.Big)(v)
+		txnEvent.R = (*hexutil.Big)(r)
+		txnEvent.S = (*hexutil.Big)(s)
+
+		txnEvent.TransactionIndex = uint64(index)
+		txnEvent.BlockNumber = ev.Block.Number()
+		txnEvent.BlockHash = ev.Block.Hash()
+		txnEvent.From,err = types.Sender(types.HomesteadSigner{}, tx)
+		if err != nil {
+			log.Error("Error in deriving the sender", "Error", err.Error())
+		}
+
+		ok := MelangeEvent.EmitTransactionEvent(ev.Melange.EventsFeed, txnEvent)
+		if !ok {
+			log.Error("Problem Sending Txn Event to Melange", "OK", ok)
+		}
+		log.Info("sender", "sender", sender)
+	}
 }
 
 func (es *EventSystem) handleChainEvent(filters filterIndex, ev core.ChainEvent) {
