@@ -175,9 +175,7 @@ func makeFullNode(ctx *cli.Context) (*node.Node, ethapi.Backend) {
 			cfg.Eth.ECBP1100NoDisable = &enable
 		}
 	}
-
 	backend, eth := utils.RegisterEthService(stack, &cfg.Eth)
-
 	// Configure catalyst.
 	if ctx.GlobalBool(utils.CatalystFlag.Name) {
 		if eth == nil {

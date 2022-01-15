@@ -119,6 +119,7 @@ type EventSystem struct {
 // The returned manager has a loop that needs to be stopped with the Stop function
 // or by stopping the given mux.
 func NewEventSystem(backend Backend, lightMode bool) *EventSystem {
+
 	m := &EventSystem{
 		backend:       backend,
 		lightMode:     lightMode,
@@ -567,7 +568,6 @@ func (es *EventSystem) eventLoop() {
 	for i := UnknownSubscription; i < LastIndexSubscription; i++ {
 		index[i] = make(map[rpc.ID]*subscription)
 	}
-
 	for {
 		select {
 		case ev := <-es.txsCh:

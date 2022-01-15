@@ -18,7 +18,10 @@ goerli:
 	$(GORUN) build/ci.go install ./cmd/geth
 	@echo "Done building."
 	@echo "Run \"$(GOBIN)/geth\" to launch geth."
-	$(GOBIN)/geth --syncmode=full --goerli
+	$(GOBIN)/geth --syncmode=full --goerli --http --http.port 8545 --http.api debug,trace,eth,net,web3,personal,txpool,miner
+
+attach:
+	$(GOBIN)/geth attach http://127.0.0.1:8545
 
 all:
 	$(GORUN) build/ci.go install
