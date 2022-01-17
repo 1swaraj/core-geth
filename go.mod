@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/Azure/azure-storage-blob-go v0.7.0
-	github.com/NethermindEth/MelangeBE v0.0.0-20220116211526-e6489035f44d
+	github.com/NethermindEth/MelangeBE v0.0.0-20220117211830-4c8f11b8c749
 	github.com/VictoriaMetrics/fastcache v1.6.0
 	github.com/alecthomas/jsonschema v0.0.0-20210413112511-5c9c23bdc720
 	github.com/aws/aws-sdk-go-v2 v1.2.0

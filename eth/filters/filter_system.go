@@ -22,13 +22,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/NethermindEth/MelangeBE/ABIDecoder"
 	"github.com/NethermindEth/MelangeBE/ABIDecoder/logDecoder"
 	MelangeEvent "github.com/NethermindEth/MelangeBE/DataIngestor"
 	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"strings"
 	"sync"
 	"time"
 
@@ -583,7 +580,6 @@ func (es *EventSystem) eventLoop() {
 			es.handlePendingLogs(index, ev)
 		case ev := <-es.chainCh:
 			if len(ev.Logs) > 0 {
-				log.Error("Logs present in this block", "Total Logs in this Block", len(ev.Logs))
 				txn := ev.Block.Transactions()
 				logsByTxn := make(map[common.Hash][]*types.Log)
 				for _, tx := range txn {
@@ -594,31 +590,19 @@ func (es *EventSystem) eventLoop() {
 				}
 				for _, logs := range logsByTxn {
 					for _, logIndivdual := range logs {
-						abiString, err := ABIDecoder.GetAbi(logIndivdual.Address.String())
-						if err == nil {
-							if abiString.Result != "Contract source code not verified" {
-								log.Error("Contract ABI", "Contract", logIndivdual.Address.String(), "Contract ABI", abiString.Result)
-								contractAbi, err := abi.JSON(strings.NewReader(string(abiString.Result)))
-								if err != nil {
-									log.Error("Could not decode abi", "Error", err.Error())
-								} else {
-									events, err := logDecoder.ParseContractEvents(logs, contractAbi)
-									if err != nil {
-										log.Error("Could not decode abi", "Error", err.Error())
-									} else {
-										log.Error("Logs Trail", "TxHash", logIndivdual.TxHash.String())
-										log.Error("Event","Event",events)
-										log.Error("Log","Logs",logIndivdual)
-										for _, event := range events {
-											for key, value := range event["event_data"].(logDecoder.RawParsedEventData) {
-												log.Error("Event", "Key", key, "Value", value)
-											}
-										}
-									}
+						var err error
+						var events []logDecoder.ParsedEvent
+						events, err = logDecoder.ParseLogs(logs,ev.Melange.ABIStore)
+						log.Info("ABI Store","Size",len(*ev.Melange.ABIStore))
+						if err != nil {
+							log.Error("Could not decode abi", "Error", err.Error())
+						} else {
+							log.Error("Logs Trail","Event",events, "TxHash", logIndivdual.TxHash.String())
+							for _, event := range events {
+								for key, value := range event["event_data"].(logDecoder.RawParsedEventData) {
+									log.Error("txn"+logIndivdual.TxHash.String(), "Key", key, "Value", value)
 								}
 							}
-						} else {
-							log.Error("Could not get ABI", "No ABI", err.Error())
 						}
 					}
 				}
