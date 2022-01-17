@@ -22,9 +22,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/NethermindEth/MelangeBE/ABIDecoder"
+	"github.com/NethermindEth/MelangeBE/ABIDecoder/logDecoder"
 	MelangeEvent "github.com/NethermindEth/MelangeBE/DataIngestor"
 	Melange "github.com/NethermindEth/MelangeBE/DataIngestor/configs"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"strings"
 	"sync"
 	"time"
 
@@ -119,7 +123,6 @@ type EventSystem struct {
 // The returned manager has a loop that needs to be stopped with the Stop function
 // or by stopping the given mux.
 func NewEventSystem(backend Backend, lightMode bool) *EventSystem {
-
 	m := &EventSystem{
 		backend:       backend,
 		lightMode:     lightMode,
@@ -379,7 +382,6 @@ func (es *EventSystem) handleTxsEvent(filters filterIndex, ev core.NewTxsEvent) 
 }
 
 func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
-	log.Info("Melange", "Sources", ev.Melange.Sources)
 	blockEvent := Melange.BlockEvent{
 		ParentHash:  ev.Block.Hash(),
 		UncleHash:   ev.Block.UncleHash(),
@@ -402,25 +404,25 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 	if !ok {
 		log.Error("Problem Sending Event to Melange", "OK", ok)
 	}
-	log.Info("Emitting Event", "Block Number", ev.Block.Number().String(), "Block Hash", ev.Block.Hash().Hex(), "Reorg", ev.Reorg)
 
 	for index, tx := range ev.Block.Transactions() {
+
 		sender, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
 		if err != nil {
 			log.Error("Error in getting from address of transaction", "Details", err, "Hash", tx.Hash().String())
 		}
-		txn,err := tx.MarshalJSON()
+		txn, err := tx.MarshalJSON()
 		if err != nil {
 			log.Error("Error in marshalling json", "Error", err.Error())
 		}
 
 		txnEvent := Melange.TransactionEvent{}
-		err = json.Unmarshal(txn,&txnEvent)
+		err = json.Unmarshal(txn, &txnEvent)
 		if err != nil {
 			log.Error("Error in unmarshalling json", "Error", err.Error())
 		}
 
-		v,r,s := tx.RawSignatureValues()
+		v, r, s := tx.RawSignatureValues()
 		txnEvent.V = (*hexutil.Big)(v)
 		txnEvent.R = (*hexutil.Big)(r)
 		txnEvent.S = (*hexutil.Big)(s)
@@ -428,7 +430,8 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 		txnEvent.TransactionIndex = uint64(index)
 		txnEvent.BlockNumber = ev.Block.Number()
 		txnEvent.BlockHash = ev.Block.Hash()
-		txnEvent.From,err = types.Sender(types.HomesteadSigner{}, tx)
+
+		txnEvent.From, err = types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
 		if err != nil {
 			log.Error("Error in deriving the sender", "Error", err.Error())
 		}
@@ -579,6 +582,47 @@ func (es *EventSystem) eventLoop() {
 		case ev := <-es.pendingLogsCh:
 			es.handlePendingLogs(index, ev)
 		case ev := <-es.chainCh:
+			if len(ev.Logs) > 0 {
+				log.Error("Logs present in this block", "Total Logs in this Block", len(ev.Logs))
+				txn := ev.Block.Transactions()
+				logsByTxn := make(map[common.Hash][]*types.Log)
+				for _, tx := range txn {
+					logsByTxn[tx.Hash()] = []*types.Log{}
+				}
+				for _, log := range ev.Logs {
+					logsByTxn[log.TxHash] = append(logsByTxn[log.TxHash], log)
+				}
+				for _, logs := range logsByTxn {
+					for _, logIndivdual := range logs {
+						abiString, err := ABIDecoder.GetAbi(logIndivdual.Address.String())
+						if err == nil {
+							if abiString.Result != "Contract source code not verified" {
+								log.Error("Contract ABI", "Contract", logIndivdual.Address.String(), "Contract ABI", abiString.Result)
+								contractAbi, err := abi.JSON(strings.NewReader(string(abiString.Result)))
+								if err != nil {
+									log.Error("Could not decode abi", "Error", err.Error())
+								} else {
+									events, err := logDecoder.ParseContractEvents(logs, contractAbi)
+									if err != nil {
+										log.Error("Could not decode abi", "Error", err.Error())
+									} else {
+										log.Error("Logs Trail", "TxHash", logIndivdual.TxHash.String())
+										log.Error("Event","Event",events)
+										log.Error("Log","Logs",logIndivdual)
+										for _, event := range events {
+											for key, value := range event["event_data"].(logDecoder.RawParsedEventData) {
+												log.Error("Event", "Key", key, "Value", value)
+											}
+										}
+									}
+								}
+							}
+						} else {
+							log.Error("Could not get ABI", "No ABI", err.Error())
+						}
+					}
+				}
+			}
 			es.emitEvents(index, ev)
 			// go-ethereum does not emit out handleChain events
 			// in case of reorgs, so we will avoid that too
