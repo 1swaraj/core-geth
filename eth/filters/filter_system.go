@@ -404,10 +404,6 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 
 	for index, tx := range ev.Block.Transactions() {
 
-		sender, err := types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
-		if err != nil {
-			log.Error("Error in getting from address of transaction", "Details", err, "Hash", tx.Hash().String())
-		}
 		txn, err := tx.MarshalJSON()
 		if err != nil {
 			log.Error("Error in marshalling json", "Error", err.Error())
@@ -420,6 +416,7 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 		}
 
 		v, r, s := tx.RawSignatureValues()
+
 		txnEvent.V = (*hexutil.Big)(v)
 		txnEvent.R = (*hexutil.Big)(r)
 		txnEvent.S = (*hexutil.Big)(s)
@@ -428,7 +425,7 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 		txnEvent.BlockNumber = ev.Block.Number()
 		txnEvent.BlockHash = ev.Block.Hash()
 
-		txnEvent.From, err = types.Sender(types.NewEIP155Signer(tx.ChainId()), tx)
+		txnEvent.From, err = types.Sender(types.NewEIP1559Signer(tx.ChainId()), tx)
 		if err != nil {
 			log.Error("Error in deriving the sender", "Error", err.Error())
 		}
@@ -437,7 +434,7 @@ func (es *EventSystem) emitEvents(filters filterIndex, ev core.ChainEvent) {
 		if !ok {
 			log.Error("Problem Sending Txn Event to Melange", "OK", ok)
 		}
-		log.Info("sender", "sender", sender)
+		log.Info("Transaction Emitted", "tx", txnEvent.Hash.String(),"from",txnEvent.From)
 	}
 }
 

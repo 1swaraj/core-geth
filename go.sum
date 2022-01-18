@@ -91,6 +91,8 @@ github.com/NethermindEth/MelangeBE v0.0.0-20220117211550-452c1d9229e5 h1:g9LqPI7
 github.com/NethermindEth/MelangeBE v0.0.0-20220117211550-452c1d9229e5/go.mod h1:sAyyXCCVgsSf+i8qWgdcxWzUGCeQIHBBjQ3nVdFcPuM=
 github.com/NethermindEth/MelangeBE v0.0.0-20220117211830-4c8f11b8c749 h1:4lM5+B2KzhvPiy1dBEv9c5uvvBX3dAFxCPP562s/xcc=
 github.com/NethermindEth/MelangeBE v0.0.0-20220117211830-4c8f11b8c749/go.mod h1:sAyyXCCVgsSf+i8qWgdcxWzUGCeQIHBBjQ3nVdFcPuM=
+github.com/NethermindEth/MelangeBE v0.0.0-20220118102523-7e522e61650b h1:lny6ihBpeYEJ3KkToCpO0mMge/uwBx+JSBpQUSYRsa8=
+github.com/NethermindEth/MelangeBE v0.0.0-20220118102523-7e522e61650b/go.mod h1:sAyyXCCVgsSf+i8qWgdcxWzUGCeQIHBBjQ3nVdFcPuM=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
 github.com/OneOfOne/xxhash v1.2.5/go.mod h1:eZbhyaAYD41SGSSsnmcpxVoRiQ/MPUTjUdIIOT9Um7Q=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
