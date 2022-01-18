@@ -588,22 +588,15 @@ func (es *EventSystem) eventLoop() {
 				for _, log := range ev.Logs {
 					logsByTxn[log.TxHash] = append(logsByTxn[log.TxHash], log)
 				}
-				for _, logs := range logsByTxn {
-					for _, logIndivdual := range logs {
-						var err error
-						var events []logDecoder.ParsedEvent
-						events, err = logDecoder.ParseLogs(logs,ev.Melange.ABIStore)
-						log.Info("ABI Store","Size",len(*ev.Melange.ABIStore))
-						if err != nil {
-							log.Error("Could not decode abi", "Error", err.Error())
-						} else {
-							log.Error("Logs Trail","Event",events, "TxHash", logIndivdual.TxHash.String())
-							for _, event := range events {
-								for key, value := range event["event_data"].(logDecoder.RawParsedEventData) {
-									log.Error("txn"+logIndivdual.TxHash.String(), "Key", key, "Value", value)
-								}
-							}
-						}
+				for txHash, logs := range logsByTxn {
+					var err error
+					var events []logDecoder.ParsedEvent
+					events, err = logDecoder.ParseLogs(logs,ev.Melange.ABIStore)
+					log.Info("ABI Store","Size",len(*ev.Melange.ABIStore))
+					if err != nil {
+						log.Error("Could not decode abi", "Error", err.Error())
+					} else {
+						log.Info("Logs Trail","Event",events, "TxHash", txHash)
 					}
 				}
 			}
